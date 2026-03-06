@@ -1,51 +1,76 @@
+from faker import Faker
 import random
-from datetime import datetime, timedelta
+
+fake = Faker("en_IN")
 
 
 def generate_sample_value(field_type, field_name):
 
-    name = (field_name or "").lower()
+    if not field_name:
+        return ""
 
-    if "case" in name and "number" in name:
-        return random.randint(7000000,7999999)
+    name = str(field_name).lower()
 
-    if "cif" in name:
-        return random.randint(10000000,99999999)
+    try:
 
-    if "loan" in name and "number" in name:
-        return random.randint(1000,9999)
+        # Name fields
+        if "name" in name:
+            return fake.name()
 
-    if "account" in name:
-        return random.randint(100000000000,999999999999)
+        # CIF / Account
+        if "cif" in name or "account" in name:
+            return random.randint(10000000, 99999999)
 
-    if "customer" in name or "name" in name:
-        return random.choice([
-            "Rahul Sharma",
-            "Amit Patel",
-            "Priya Nair",
-            "Neha Verma",
-            "Parth Kapoor"
-        ])
+        # Email
+        if "email" in name:
+            return fake.email()
 
-    if "owner" in name or "assigned" in name:
-        return random.choice([
-            "Operations Team",
-            "Customer Support",
-            "Branch Manager",
-            "Loan Processing Team"
-        ])
+        # Phone
+        if "phone" in name or "mobile" in name:
+            return fake.phone_number()
 
-    if "email" in name:
-        return "customer@gmail.com"
+        # Address
+        if "address" in name:
+            return fake.address()
 
-    if "phone" in name:
-        return "+91 9876543210"
+        # City
+        if "city" in name:
+            return fake.city()
 
-    if "amount" in name:
-        return f"{random.randint(1000,500000):,}"
+        # Country
+        if "country" in name:
+            return fake.country()
 
-    if "date" in name:
-        date = datetime.now() - timedelta(days=random.randint(1,400))
-        return date.strftime("%d-%b-%Y")
+        # Company
+        if "company" in name:
+            return fake.company()
 
-    return ""
+        # URL
+        if "url" in name:
+            return fake.url()
+
+        # Date fields
+        if field_type in ["Date", "DateTime"]:
+            return fake.date()
+
+        # Amount
+        if field_type in ["Amount", "Decimal", "Currency"]:
+            return round(random.uniform(1000, 500000), 2)
+
+        # Number
+        if field_type in ["Number", "BigInt"]:
+            return random.randint(1, 100)
+
+        # Percentage
+        if field_type == "Percentage":
+            return random.randint(1, 100)
+
+        # Text
+        if field_type in ["Text", "LongText", "Comments"]:
+            return fake.word()
+
+        # Default fallback
+        return ""
+
+    except:
+        return ""
