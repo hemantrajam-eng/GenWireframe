@@ -41,13 +41,13 @@ def load_css():
     /* Field label */
     .field-label{
         font-weight:600;
-        color:#444;
+        color:#0097a7;
         font-size:15px;
     }
 
     /* Field value */
     .field-value{
-        color:#0097a7;
+        color:#444;
         font-size:15px;
     }
 
@@ -249,3 +249,4 @@ def generate_wireframe(df, page_type):
                         col_index += span
 
                 st.divider()
+
