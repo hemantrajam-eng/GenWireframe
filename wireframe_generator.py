@@ -1,51 +1,137 @@
 import streamlit as st
+
+
 def load_css():
 
     st.markdown("""
     <style>
 
+    /* App background */
+    .main {
+        background-color:#f5f6f7;
+    }
+
+    /* Header card */
+    .header-card{
+        background:white;
+        padding:15px;
+        border-radius:6px;
+        margin-bottom:15px;
+        box-shadow:0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    .header-title{
+        font-size:18px;
+        font-weight:600;
+    }
+
+    .header-value{
+        color:#0097a7;
+        font-weight:500;
+    }
+
     /* Section Title */
     .section-title{
         font-size:22px;
         font-weight:600;
-        margin-top:25px;
+        margin-top:20px;
         margin-bottom:10px;
     }
 
-    /* Label styling */
+    /* Field label */
     .field-label{
         font-weight:600;
+        color:#444;
+        font-size:15px;
+    }
+
+    /* Field value */
+    .field-value{
         color:#0097a7;
         font-size:15px;
     }
 
-    /* Value styling */
-    .field-value{
-        color:#444;
-        font-size:15px;
-        padding-top:2px;
+    /* Sidebar */
+    .sidebar {
+        background:#0aa89e;
+        height:100vh;
+        padding-top:20px;
     }
 
-    /* Field row spacing */
-    .field-row{
-        margin-bottom:10px;
+    .sidebar-icon{
+        font-size:22px;
+        text-align:center;
+        margin:25px 0;
+        color:white;
     }
 
-    /* Tabs style */
+    /* Tabs */
     .stTabs [data-baseweb="tab"]{
         font-size:16px;
         font-weight:500;
+        padding-bottom:10px;
+    }
+
+    .stTabs [aria-selected="true"]{
+        border-bottom:3px solid red;
     }
 
     </style>
     """, unsafe_allow_html=True)
 
+
+def render_header(df):
+
+    header_fields = ["Case Number", "Sub Category", "Raised On Date", "Customer Closure Date"]
+
+    header_data = df[df["Label"].isin(header_fields)]
+
+    if header_data.empty:
+        return
+
+    st.markdown("<div class='header-card'>", unsafe_allow_html=True)
+
+    cols = st.columns(len(header_data))
+
+    for i, row in enumerate(header_data.itertuples()):
+
+        with cols[i]:
+
+            st.markdown(
+                f"""
+                <div class="header-title">{row.Label}</div>
+                <div class="header-value">{row.DemoValue}</div>
+                """,
+                unsafe_allow_html=True
+            )
+
+    st.markdown("</div>", unsafe_allow_html=True)
+
+
+def render_sidebar():
+
+    with st.sidebar:
+
+        st.markdown("<div class='sidebar'>", unsafe_allow_html=True)
+
+        icons = ["🏠","📂","📊","🧾","📎","⚙"]
+
+        for icon in icons:
+
+            st.markdown(
+                f"<div class='sidebar-icon'>{icon}</div>",
+                unsafe_allow_html=True
+            )
+
+        st.markdown("</div>", unsafe_allow_html=True)
+
+
 def render_control(field):
 
     label = field["Label"]
-    value = field.get("DemoValue", "")
-    ftype = field.get("FieldType", "Text")
-    key = field.get("FieldId", label)
+    value = field["DemoValue"]
+    ftype = field["FieldType"]
+    key = field["FieldId"]
 
     if ftype == "Text":
         return st.text_input(label, value=value, key=key)
@@ -67,13 +153,7 @@ def render_control(field):
     elif ftype == "Date":
         return st.date_input(label, key=key)
 
-    elif ftype == "Email":
-        return st.text_input(label, value=value, key=key)
-
-    elif ftype == "Phone":
-        return st.text_input(label, value=value, key=key)
-
-    elif ftype in ["Comments", "LongText"]:
+    elif ftype in ["Comments","LongText"]:
         return st.text_area(label, value=value, key=key)
 
     elif ftype == "Check":
@@ -82,10 +162,11 @@ def render_control(field):
     else:
         return st.text_input(label, value=value, key=key)
 
+
 def render_detail_field(field):
 
-    label = field.get("Label", "")
-    value = field.get("DemoValue", "")
+    label = field.get("Label","")
+    value = field.get("DemoValue","")
 
     col1, col2 = st.columns([1,2])
 
@@ -101,13 +182,16 @@ def render_detail_field(field):
             unsafe_allow_html=True
         )
 
+
 def generate_wireframe(df, page_type):
 
     load_css()
-    tabs = df["Tab"].dropna().unique().tolist()
 
-    if not tabs:
-        tabs = ["Summary"]
+    render_sidebar()
+
+    render_header(df)
+
+    tabs = df["Tab"].dropna().unique().tolist()
 
     tab_objects = st.tabs(tabs)
 
@@ -121,7 +205,10 @@ def generate_wireframe(df, page_type):
 
             for section in sections:
 
-                st.subheader(section)
+                st.markdown(
+                    f"<div class='section-title'>{section}</div>",
+                    unsafe_allow_html=True
+                )
 
                 sec_df = tab_df[tab_df["Section"] == section]
 
@@ -133,40 +220,32 @@ def generate_wireframe(df, page_type):
 
                     fields = row_df.to_dict("records")
 
-                    # Remove blank layout placeholders
                     fields = [
                         f for f in fields
-                        if f.get("FieldId") and str(f["FieldId"]).lower() != "blankcell"
+                        if f["FieldId"] and str(f["FieldId"]).lower() != "blankcell"
                     ]
 
                     if not fields:
                         continue
 
-                    # Single field row
-                    if len(fields) == 1:
+                    total_span = sum(int(f.get("ColSpan",1)) for f in fields)
 
-                        if page_type == "Detail Page":
-                            render_detail_field(fields[0])
-                        else:
-                            render_control(fields[0])
+                    cols = st.columns(total_span)
 
-                    # Two column row
-                    elif len(fields) >= 2:
+                    col_index = 0
 
-                        col1, col2 = st.columns(2)
+                    for field in fields:
 
-                        with col1:
+                        span = int(field.get("ColSpan",1))
+
+                        with cols[col_index]:
 
                             if page_type == "Detail Page":
-                                render_detail_field(fields[0])
-                            else:
-                                render_control(fields[0])
+                                render_detail_field(field)
 
-                        with col2:
-
-                            if page_type == "Detail Page":
-                                render_detail_field(fields[1])
                             else:
-                                render_control(fields[1])
+                                render_control(field)
+
+                        col_index += span
 
                 st.divider()
