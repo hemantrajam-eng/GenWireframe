@@ -1,13 +1,15 @@
+from openai import OpenAI
 import json
 import streamlit as st
-from openai import OpenAI
 
 client = OpenAI(api_key=st.secrets.get("openai", {}).get("key"))
 
 SYSTEM_PROMPT = """
 You are a CRM UI designer.
 
-Convert the user prompt into a layout JSON using this schema:
+Convert the user prompt into layout JSON.
+
+Schema:
 
 {
  "tabs":[
@@ -30,25 +32,20 @@ Convert the user prompt into a layout JSON using this schema:
  ]
 }
 
-Rules:
-- Default colspan = 1
-- Group fields logically
-- Use CRM field types like Text, Number, Amount, Date, Email, Phone
-- Return ONLY JSON
+Return ONLY JSON.
 """
+
 
 def generate_layout_from_prompt(user_prompt):
 
-    response = client.chat.completions.create(
-        model="gpt-4o-mini",
-        messages=[
-            {"role":"system","content":SYSTEM_PROMPT},
-            {"role":"user","content":user_prompt}
+    response = client.responses.create(
+        model="gpt-4.1-mini",
+        input=[
+            {"role": "system", "content": SYSTEM_PROMPT},
+            {"role": "user", "content": user_prompt}
         ]
     )
 
-    layout_json = response.choices[0].message.content
+    text_output = response.output_text
 
-
-    return json.loads(layout_json)
-
+    return json.loads(text_output)
