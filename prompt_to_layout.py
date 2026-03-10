@@ -1,4 +1,5 @@
 import json
+import streamlit as st
 from openai import OpenAI
 
 client = OpenAI(api_key=st.secrets.get("openai", {}).get("key"))
@@ -50,3 +51,4 @@ def generate_layout_from_prompt(user_prompt):
 
 
     return json.loads(layout_json)
+
