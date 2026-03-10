@@ -39,7 +39,7 @@ Return ONLY JSON.
 def generate_layout_from_prompt(user_prompt):
 
     response = client.responses.create(
-        model="gpt-4.1-mini",
+        model="gpt-4o",
         input=[
             {"role": "system", "content": SYSTEM_PROMPT},
             {"role": "user", "content": user_prompt}
@@ -49,3 +49,4 @@ def generate_layout_from_prompt(user_prompt):
     text_output = response.output_text
 
     return json.loads(text_output)
+
