@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+import time
 
 from prompt_to_layout import generate_layout_from_prompt
 from layout_to_df import layout_json_to_df
@@ -31,13 +32,27 @@ Customer Name
 CIF
 """
 )
-
+    
 if st.button("Generate Wireframe"):
-
-    layout_json = generate_layout_from_prompt(user_prompt)
+    
+    if not user_prompt.strip():
+        st.warning("Please enter a prompt")
+        st.stop()
+        
+    try:
+        layout_json = generate_layout_from_prompt(user_prompt)
+    
+    except Exception as e:
+    
+        st.warning("AI rate limit reached. Retrying...")
+    
+        time.sleep(3)
+    
+        layout_json = generate_layout_from_prompt(user_prompt)
 
     df = layout_json_to_df(layout_json)
 
     st.success("Layout Generated")
 
     generate_wireframe(df, page_type)
+
