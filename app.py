@@ -1,45 +1,43 @@
 import streamlit as st
-from xml_parser import parse_layout_xml
+import pandas as pd
+
+from prompt_to_layout import generate_layout_from_prompt
+from layout_to_df import layout_json_to_df
 from wireframe_generator import generate_wireframe
 
-st.set_page_config(layout="wide")
-
-st.title("AI Layout → Wireframe Generator")
+st.title("AI Wireframe Generator")
 
 page_type = st.selectbox(
-    "Select Page Type",
-    ["Detail Page","Edit Page","Summary Page","Object Home"]
+    "Page Type",
+    ["Detail Page","New/Edit Page"]
 )
 
-uploaded_xml = st.file_uploader(
-    "Upload Layout XML",
-    type="xml"
+st.subheader("Prompt Based Layout")
+
+user_prompt = st.text_area(
+    "Describe your screen",
+    height=150,
+    placeholder="""
+Create a CRM case detail page.
+
+Tabs: Summary, Attachments
+
+Summary Tab
+Section: Case Information
+Fields:
+Case Number
+Assigned To
+Customer Name
+CIF
+"""
 )
 
-if uploaded_xml:
+if st.button("Generate Wireframe"):
 
-    # Load XML only first time
-    if "layout_df" not in st.session_state:
+    layout_json = generate_layout_from_prompt(user_prompt)
 
-        df = parse_layout_xml(uploaded_xml)
+    df = layout_json_to_df(layout_json)
 
-        df["DemoValue"] = df["DemoValue"].astype(str)
+    st.success("Layout Generated")
 
-        st.session_state.layout_df = df
-
-
-    st.subheader("Editable Demo Data")
-
-    edited_df = st.data_editor(
-        st.session_state.layout_df,
-        key="demo_editor",
-        use_container_width=True,
-        num_rows="dynamic"
-    )
-
-    # Save updated values
-    st.session_state.layout_df = edited_df
-
-    st.subheader("Generated Wireframe")
-
-    generate_wireframe(edited_df, page_type)
+    generate_wireframe(df, page_type)
