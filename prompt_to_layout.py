@@ -1,7 +1,7 @@
 import json
 from openai import OpenAI
 
-client = OpenAI()
+client = OpenAI(api_key=st.secrets.get("openai", {}).get("key"))
 
 SYSTEM_PROMPT = """
 You are a CRM UI designer.
@@ -47,5 +47,6 @@ def generate_layout_from_prompt(user_prompt):
     )
 
     layout_json = response.choices[0].message.content
+
 
     return json.loads(layout_json)
