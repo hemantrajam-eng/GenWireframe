@@ -54,7 +54,7 @@ SYSTEM_PROMPT = "You are a CRM UI designer. Convert the user prompt into layout 
 
 def generate_layout_from_prompt(user_prompt):
     response = client.responses.create(
-        model="llama3.1",
+        model="gemma3",
         input=[
             {"role": "system", "content": SYSTEM_PROMPT},
             {"role": "user", "content": user_prompt},
